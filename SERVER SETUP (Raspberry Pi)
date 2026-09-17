@@ -1,0 +1,267 @@
+1️⃣ Raspberry Pi Access Point Configuration
+
+Purpose
+
+The Raspberry Pi functions as:
+
+· Access Point (WiFi Venue)
+· MQTT Broker
+· Backend Server
+· Frontend Server
+
+Thus, the entire system can operate without internet.
+
+Topology:
+
+```text
+Operator Laptop
+       │
+       │ WiFi
+       ▼
+ Raspberry Pi (Access Point)
+       │
+       ├── Frontend
+       ├── Backend API
+       ├── MQTT Broker
+       │
+       ▼
+ ESP32 
+       │
+       ▼
+      LoRa
+       │
+       ▼
+  Arduino Mega Display
+```
+
+---
+
+Install Access Point Packages
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+
+sudo apt install hostapd dnsmasq -y
+```
+
+Enable service:
+
+```bash
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+```
+
+---
+
+Set Static IP for WLAN
+
+Edit:
+
+```bash
+sudo nano /etc/dhcpcd.conf
+```
+
+Add:
+
+```text
+interface wlan0
+static ip_address=192.168.50.1/24
+nohook wpa_supplicant
+```
+
+Restart:
+
+```bash
+sudo service dhcpcd restart
+```
+
+---
+
+DHCP Server Configuration
+
+Backup configuration:
+
+```bash
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.backup
+```
+
+Create new configuration:
+
+```bash
+sudo nano /etc/dnsmasq.conf
+```
+
+Content:
+
+```text
+interface=wlan0
+dhcp-range=192.168.50.10,192.168.50.100,255.255.255.0,24h
+```
+
+---
+
+Hostapd Configuration
+
+```bash
+sudo nano /etc/hostapd/hostapd.conf
+```
+
+Content:
+
+```text
+country_code=ID
+
+interface=wlan0
+driver=nl80211
+
+ssid=VENUE-SCOREBOARD
+
+hw_mode=g
+channel=6
+
+wmm_enabled=0
+
+auth_algs=1
+
+ignore_broadcast_ssid=0
+
+wpa=2
+wpa_passphrase=Venue12345
+
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+```
+
+---
+
+Connect Hostapd
+
+Edit:
+
+```bash
+sudo nano /etc/default/hostapd
+```
+
+Change to:
+
+```text
+DAEMON_CONF="/etc/hostapd/hostapd.conf"
+```
+
+---
+
+Run Access Point
+
+```bash
+sudo systemctl restart hostapd
+sudo systemctl restart dnsmasq
+```
+
+Verification:
+
+```bash
+sudo systemctl status hostapd
+```
+
+---
+
+Reboot
+
+```bash
+sudo reboot
+```
+
+---
+
+Verification
+
+SSID:
+
+```text
+VENUE-SCOREBOARD
+```
+
+Password:
+
+```text
+Venue12345
+```
+
+Raspberry Pi IP:
+
+```bash
+hostname -I
+```
+
+Output:
+
+```text
+192.168.50.1
+```
+
+---
+
+ESP32 Configuration
+
+The ESP32 will connect to the same AP:
+
+```cpp
+const char* ssid = "VENUE-SCOREBOARD";
+const char* password = "Venue12345";
+
+const char* mqtt_server = "192.168.50.1";
+```
+
+---
+
+2️⃣ Install Node.js
+
+Check version:
+
+```bash
+node -v
+npm -v
+```
+
+If not available:
+
+```bash
+sudo apt install nodejs npm -y
+```
+
+---
+
+3️⃣ Install MQTT Broker (Mosquitto)
+
+```bash
+sudo apt install mosquitto mosquitto-clients -y
+```
+
+Enable service:
+
+```bash
+sudo systemctl enable mosquitto
+sudo systemctl start mosquitto
+```
+
+Test:
+
+```bash
+mosquitto_sub -t test
+mosquitto_pub -t test -m "hello"
+```
+
+---
+
+4️⃣ Backend Setup
+
+```bash
+mkdir -p /opt/venue-server/backend
+
+cd /opt/venue-server/backend
+
+npm init -y
+
+npm install express mqtt cors
+```
