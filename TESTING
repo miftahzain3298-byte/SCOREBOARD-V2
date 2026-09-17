@@ -1,0 +1,17 @@
+API Test
+
+```bash
+curl -X POST http://192.168.50.1:3000/api/score \
+-H "Content-Type: application/json" \
+-d '{"lap":1,"scoreA":2,"scoreB":1,"period":1}'
+```
+
+---
+
+MQTT Test
+
+Monitor all data:
+
+```bash
+mosquitto_sub -t "V001/#"
+```
