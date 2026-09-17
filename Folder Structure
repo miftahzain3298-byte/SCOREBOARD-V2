@@ -1,0 +1,5 @@
+/opt/venue-server
+├── backend
+│   └── server.js
+└── frontend
+    └── index.html
