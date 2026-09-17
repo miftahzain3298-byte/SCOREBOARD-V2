@@ -1,0 +1,68 @@
+```javascript
+const express = require('express');
+const mqtt = require('mqtt');
+const cors = require('cors');
+
+const app = express();
+const port = 3000;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// MQTT Configuration
+const mqttBroker = 'mqtt://192.168.50.1';
+const client = mqtt.connect(mqttBroker);
+
+client.on('connect', () => {
+    console.log('Connected to MQTT Broker');
+});
+
+// API Endpoint for Score Update
+app.post('/api/score', (req, res) => {
+    const { lap, scoreA, scoreB, period } = req.body;
+    
+    const payload = JSON.stringify({
+        scoreA,
+        scoreB,
+        period,
+        timestamp: Date.now()
+    });
+    
+    const topic = `V001/lap${lap}/state`;
+    
+    client.publish(topic, payload, (err) => {
+        if (err) {
+            console.error('MQTT Publish Error:', err);
+            res.status(500).json({ error: 'Failed to publish score' });
+        } else {
+            console.log(`Score published to ${topic}:`, payload);
+            res.json({ success: true, topic, payload });
+        }
+    });
+});
+
+// API Endpoint for Timer Control
+app.post('/api/timer', (req, res) => {
+    const { lap, command } = req.body; // command: S, P, R
+    
+    const topic = `V001/lap${lap}/timer`;
+    
+    client.publish(topic, command, (err) => {
+        if (err) {
+            console.error('MQTT Publish Error:', err);
+            res.status(500).json({ error: 'Failed to send timer command' });
+        } else {
+            console.log(`Timer command sent to ${topic}:`, command);
+            res.json({ success: true, topic, command });
+        }
+    });
+});
+
+// Serve Frontend
+app.use(express.static('../frontend'));
+
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Backend server running at http://192.168.50.1:${port}`);
+});
+```
