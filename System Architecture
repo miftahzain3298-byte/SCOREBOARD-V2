@@ -1,0 +1,19 @@
+[Operator Laptop]
+        │ (Browser)
+        ▼
+[Frontend UI]
+        │ HTTP
+        ▼
+[Backend Node.js API]
+        │ MQTT Publish
+        ▼
+[MQTT Broker (Mosquitto)]
+        │
+        ▼
+[ESP32 TX]
+        │ LoRa
+        ▼
+[ESP32 RX Display]
+        │
+        ▼
+[LED Matrix / Serial Monitor]
