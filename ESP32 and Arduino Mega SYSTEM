@@ -1,0 +1,10 @@
+(MQTT → LoRa)
+
+· Subscribe to MQTT
+· Send commands via LoRa
+
+Arduino Mega (Display)
+
+· Receive LoRa commands
+· Run internal timer
+· Display scores and match time
